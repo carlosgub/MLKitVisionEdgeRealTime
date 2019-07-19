@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
@@ -16,11 +15,8 @@ import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.carlosgub.mlkitrealtime.utils.toBitmap
 import com.google.firebase.ml.common.FirebaseMLException
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 
 
 private const val REQUEST_CODE_PERMISSIONS = 10
@@ -32,7 +28,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
 
     private var classifier: ImageClassifier? = null
     private var bitmap: Bitmap? = null
-    private var orientation=0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,27 +60,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
 
     private fun startCamera() {
         // Create configuration object for the viewfinder use case
-        val imageAnalysisConfig = ImageAnalysisConfig.Builder()
-            .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-            //.setTargetResolution(Size(1280, 720))
-            .build()
-        val imageAnalysis = ImageAnalysis(imageAnalysisConfig)
-
-        imageAnalysis.setAnalyzer { image: ImageProxy, orientation: Int ->
-            if(bitmap==null){
-                this.orientation = orientation
-                bitmap = image.toBitmap()
-                try {
-                    classifier = ImageClassifier(this)
-                } catch (e: FirebaseMLException) {
-                    Log.d(":)",e.message.toString())
-                }
-                classifier?.classifyFrame(bitmap!!)
-
-            }else{
-                bitmap = image.toBitmap()
-            }
-        }
 
         val previewConfig = PreviewConfig.Builder()
             .build()
@@ -99,9 +73,19 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
 
             tv.surfaceTexture = it.surfaceTexture
             updateTransform()
+
+            if(bitmap==null){
+                bitmap = tv.bitmap
+                try {
+                    classifier = ImageClassifier(this)
+                } catch (e: FirebaseMLException) {
+                    Log.d(":)",e.message.toString())
+                }
+                classifier?.classifyFrame(bitmap!!)
+            }
         }
 
-        CameraX.bindToLifecycle(this, imageAnalysis, preview)
+        CameraX.bindToLifecycle(this, preview)
     }
 
     override fun onDestroy() {
@@ -130,14 +114,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
         tv.setTransform(matrix)
     }
 
-    private fun updateBitmapOrientation(bitmap: Bitmap, orientation:Int):Bitmap{
-        val matrix = Matrix()
-
-        matrix.postRotate(orientation.toFloat())
-        return Bitmap.createBitmap(bitmap,0,0,bitmap.width,bitmap.height,matrix,true)
-    }
-
-
     /**
      * Process result from permission request dialog box, has the request
      * been granted? If yes, start Camera. Otherwise display a toast
@@ -164,14 +140,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    /*private fun getBitmap(): Bitmap {
-        runOnUiThread {
-            updateBitmapOrientation(imageProxy!!.toBitmap(),orientation)
-        }
-    }*/
-
     override fun onError(exception: Exception) {
-        //Mostrar error
         Log.d(":)",exception.message.toString())
     }
 
@@ -181,7 +150,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
     }
 
     override fun nextImage() {
-        classifier?.classifyFrame(bitmap!!)
+        classifier?.classifyFrame(tv.bitmap)
     }
 
 }
