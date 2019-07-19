@@ -22,7 +22,7 @@ Este ejemplo reconoce a los objetos que han sido entrenado dentro de  Vision Edg
 <img src="/img/android3.jpg" height="420" />
 <img src="/img/android4.jpg" height="420" />
 
-Todavia algunos faltan tomar mas fotos para mejorar su deteccion
+Todavía algunos faltan tomar más fotos para mejorar su detección
 
 ## Kotlin
 ---
