@@ -1,5 +1,7 @@
 # MLKit Vision Edge + CameraX
 
+<img src="/gif/example.gif" height="420" />
+
 Este es un ejemplo de la libreria de MLKit Vision Edge de Firebase
 
 Este ejemplo reconoce a los objetos que han sido entrenado dentro de  Vision Edge
