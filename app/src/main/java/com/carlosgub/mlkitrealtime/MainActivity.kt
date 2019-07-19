@@ -26,14 +26,14 @@ private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
 class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listener {
 
-    private var classifier: ImageClassifier? = null
-    private var bitmap: Bitmap? = null
+    private var classifier: ImageClassifier? = null //Clase de la clasificadora de Imagenes
+    private var onPause = false //Verificar que el activity no esta en OnPause
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Request camera permissions
+        //Verificar Permisos
         if (allPermissionsGranted()) {
             tv.post { startCamera() }
         } else {
@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
             updateTransform()
         }
 
+        //Limpiar ImageView
         btClearImage.setOnClickListener {
             nextImage()
             btClearImage.visibility=View.GONE
@@ -54,13 +55,17 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
 
     override fun onPause() {
         super.onPause()
-        System.exit(0)
+        onPause = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        onPause = false
+        btClearImage.performClick()
     }
 
 
     private fun startCamera() {
-        // Create configuration object for the viewfinder use case
-
         val previewConfig = PreviewConfig.Builder()
             .build()
         val preview = Preview(previewConfig)
@@ -74,15 +79,12 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
             tv.surfaceTexture = it.surfaceTexture
             updateTransform()
 
-            if(bitmap==null){
-                bitmap = tv.bitmap
-                try {
-                    classifier = ImageClassifier(this)
-                } catch (e: FirebaseMLException) {
-                    Log.d(":)",e.message.toString())
-                }
-                classifier?.classifyFrame(bitmap!!)
+            try {
+                classifier = ImageClassifier(this)
+            } catch (e: FirebaseMLException) {
+                Log.d(":)",e.message.toString())
             }
+            classifier?.classifyFrame(tv.bitmap)
         }
 
         CameraX.bindToLifecycle(this, preview)
@@ -97,8 +99,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
         val matrix = Matrix()
 
         // Compute the center of the view finder
-        val centerX = tv.width / 2f
-        val centerY = tv.height / 2f
+        val centerX = tv.width.toFloat()
+        val centerY = tv.height.toFloat()
 
         // Correct preview output to account for display rotation
         val rotationDegrees = when(tv.display.rotation) {
@@ -114,10 +116,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
         tv.setTransform(matrix)
     }
 
-    /**
-     * Process result from permission request dialog box, has the request
-     * been granted? If yes, start Camera. Otherwise display a toast
-     */
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
@@ -150,7 +148,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
     }
 
     override fun nextImage() {
-        classifier?.classifyFrame(tv.bitmap)
+        if(!onPause)classifier?.classifyFrame(tv.bitmap)
     }
 
 }
