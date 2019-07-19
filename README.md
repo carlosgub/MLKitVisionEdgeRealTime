@@ -10,7 +10,19 @@ Este ejemplo reconoce a los objetos que han sido entrenado dentro de  Vision Edg
 
 # Pasos para poder compilar la repo
 
-* Proximamente
+* Agregar el projecto en su projecto de Firebase.
+* Descargue el archivo google-services.json.
+* Agregar el archivo al proyecto.
+* Compilar.
+
+# Probar con las siguientes imagenes
+
+<img src="/img/android1.jpg" height="420" />
+<img src="/img/android2.jpg" height="420" />
+<img src="/img/android3.jpg" height="420" />
+<img src="/img/android4.jpg" height="420" />
+
+Todavia algunos faltan tomar mas fotos para mejorar su deteccion
 
 ## Kotlin
 ---
