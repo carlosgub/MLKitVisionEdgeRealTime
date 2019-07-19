@@ -1,6 +1,6 @@
 # MLKit Vision Edge + CameraX
 
-<img src="/gif/example.gif" height="420" />
+<img src="/gif/example_work.gif" height="420" />
 
 Este es un ejemplo de la libreria de MLKit Vision Edge de Firebase
 
