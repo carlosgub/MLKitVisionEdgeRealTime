@@ -25,6 +25,63 @@
             android:layout_width="0dp"
             android:layout_height="0dp"/>
 
+    <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lavDeleteOrder"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="80dp"
+            android:layout_marginEnd="80dp"
+            app:layout_constraintDimensionRatio="1:1"
+            android:scaleType="centerInside"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:lottie_autoPlay="true"
+            android:adjustViewBounds="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/scanner"
+            app:tintMode="multiply" />
+
+    <View
+            android:id="@+id/vMainLeft"
+            android:background="#992c3e50"
+            android:layout_width="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/lavDeleteOrder"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="0dp"/>
+
+    <View
+            android:background="#992c3e50"
+            android:layout_width="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/lavDeleteOrder"
+            app:layout_constraintStart_toEndOf="@+id/vMainLeft"
+            app:layout_constraintEnd_toStartOf="@+id/vMainRight"
+
+            android:layout_height="0dp"/>
+
+    <View
+            android:background="#992c3e50"
+            android:layout_width="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/lavDeleteOrder"
+            app:layout_constraintStart_toEndOf="@+id/vMainLeft"
+            app:layout_constraintEnd_toStartOf="@+id/vMainRight"
+            android:layout_height="0dp"/>
+
+    <View
+            android:id="@+id/vMainRight"
+            android:background="#992c3e50"
+            android:layout_width="0dp"
+            app:layout_constraintStart_toEndOf="@+id/lavDeleteOrder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="0dp"/>
+
     <Button
             android:id="@+id/btClearImage"
             app:layout_constraintBottom_toBottomOf="parent"

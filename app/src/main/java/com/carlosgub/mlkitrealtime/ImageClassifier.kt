@@ -22,6 +22,8 @@ import com.google.firebase.ml.common.FirebaseMLException
 import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
 import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler
@@ -30,108 +32,63 @@ import java.io.IOException
 import java.util.*
 
 //Clasificar imagenes con ML Kit
-class ImageClassifier
-@Throws(FirebaseMLException::class)
-internal constructor(private val listener:Listener) {
+class ImageClassifier {
+    private var listener: Listener? = null
 
-  /** MLKit AutoML Image Classifier  */
-  private val labeler: FirebaseVisionImageLabeler?
-
-  init {
-    FirebaseModelManager.getInstance()
-      .registerLocalModel(
-        FirebaseLocalModel.Builder(LOCAL_MODEL_NAME)
-          .setAssetFilePath(LOCAL_MODEL_PATH)
-          .build()
-      )
-
-    val options = FirebaseVisionOnDeviceAutoMLImageLabelerOptions.Builder()
-      .setConfidenceThreshold(CONFIDENCE_THRESHOLD)
-      .setLocalModelName(LOCAL_MODEL_NAME)
-      .build()
-
-    labeler = FirebaseVision.getInstance().getOnDeviceAutoMLImageLabeler(options)
-  }
-
-  interface Listener{
-    fun onError(exception: Exception)
-    fun onSucess(bitmap: Bitmap)
-    fun nextImage()
-  }
-
-  //Clasificador
-  internal fun classifyFrame(bitmap: Bitmap) {
-    //Verificar que no sea nulo
-    if (labeler == null) {
-      Log.e(TAG, "Image classifier has not been initialized; Skipped.")
-      val e = IllegalStateException("Uninitialized Classifier.")
-      listener.onError(e)
+    interface Listener {
+        fun onSuccess(barcodeValue: String)
+        fun onError(error: String?)
+        fun nextImage()
     }
 
-    //Tomar el tiempo antes de llamar al clasificador
-    //val startTime = SystemClock.uptimeMillis()
-    val image = FirebaseVisionImage.fromBitmap(bitmap)
-
-    //Procesar imagen
-    labeler?.let {
-      it.processImage(image).continueWith { task ->
-        //Tiempo cuando termina de procesar la imagen
-        //val endTime = SystemClock.uptimeMillis()
-
-        //Resultado
-        val labelProbList = task.result
-
-        ///Verificar Resultados
-        //var textToShow = "Latency: " + java.lang.Long.toString(endTime - startTime) + "ms\n"
-
-        if (!labelProbList.isNullOrEmpty()) {
-          listener.onSucess(bitmap)
-          Log.d(":)",printTopKLabels(labelProbList))
-        }else{
-          Log.d(":)","Next Image")
-          listener.nextImage()
-        }
-      }
-    }
-  }
-
-  //Cerrar el uso de  el clasificador
-  internal fun close() {
-    try {
-      labeler?.close()
-    } catch (e: IOException) {
-      Log.e(TAG, "Unable to close the labeler instance", e)
+    fun setListener(listener: Listener) {
+        this.listener = listener
     }
 
-  }
+    fun getQRCodeDetails(bitmap: Bitmap) {
+        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
+            .setBarcodeFormats(
+                FirebaseVisionBarcode.FORMAT_ALL_FORMATS
+            )
+            .build()
 
-  //Pintar el resultado
-  private val printTopKLabels: (List<FirebaseVisionImageLabel>) -> String = {
-    it.joinToString(
-      separator = "\n",
-      limit = RESULTS_TO_SHOW
-    ) { label ->
-      String.format(Locale.getDefault(), "Label: %s, Confidence: %4.2f", label.text, label.confidence)
+        /**
+         * Exiten estos formatos
+         *  Code 128 (FORMAT_CODE_128)
+        Code 39 (FORMAT_CODE_39)
+        Code 93 (FORMAT_CODE_93)
+        Codabar (FORMAT_CODABAR)
+        EAN-13 (FORMAT_EAN_13)
+        EAN-8 (FORMAT_EAN_8)
+        ITF (FORMAT_ITF)
+        UPC-A (FORMAT_UPC_A)
+        UPC-E (FORMAT_UPC_E)
+        QR Code (FORMAT_QR_CODE)
+        PDF417 (FORMAT_PDF417)
+        Aztec (FORMAT_AZTEC)
+        Data Matrix (FORMAT_DATA_MATRIX)
+         */
+        val detector = FirebaseVision.getInstance().getVisionBarcodeDetector(options)
+        val image = FirebaseVisionImage.fromBitmap(bitmap)
+        detector.detectInImage(image)
+            .addOnSuccessListener {
+                if (it.isNotEmpty()) {
+                    for (firebaseBarcode in it) {
+                        listener?.onSuccess(
+                            firebaseBarcode.displayValue ?: ""
+                        )  //Display contents inside the barcode
+                    }
+                } else {
+                    listener?.nextImage()
+                }
+
+            }
+            .addOnFailureListener {
+                it.printStackTrace()
+                listener?.onError(it.message)
+            }
     }
-  }
-
-  companion object {
-
-    /** Tag for the [Log].  */
-    private const val TAG = "MLKitAutoMLCodelab"
-
-    //Nombre del  dataset preparado
-    private const val LOCAL_MODEL_NAME = "dataset_test"
-
-    //Path de donde  se encuentra el  data set en la carpeta assets
-    private const val LOCAL_MODEL_PATH = "automl/manifest.json"
-
-    /** Name of the remote model in Firebase ML Kit server.  */
-
-    //Cantidad de Resultados que puede mostrar
-    private const val RESULTS_TO_SHOW = 3
-
-    //Probabilidad minima para contarlo como valido
-    private const val CONFIDENCE_THRESHOLD = 0.6f
-  }
 }
+
+
+

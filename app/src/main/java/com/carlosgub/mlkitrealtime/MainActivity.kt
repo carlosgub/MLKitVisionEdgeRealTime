@@ -26,7 +26,7 @@ private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
 class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listener {
 
-    private var classifier: ImageClassifier? = null //Clase de la clasificadora de Imagenes
+    private var classifier= ImageClassifier() //Clase de la clasificadora de Imagenes
     private var onPause = false //Verificar que el activity no esta en OnPause
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
     override fun onResume() {
         super.onResume()
         onPause = false
-        btClearImage.performClick()
+        if (tv.bitmap != null) btClearImage.performClick()
     }
 
 
@@ -79,20 +79,11 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
             tv.surfaceTexture = it.surfaceTexture
             updateTransform()
 
-            try {
-                classifier = ImageClassifier(this)
-            } catch (e: FirebaseMLException) {
-                Log.d(":)",e.message.toString())
-            }
-            classifier?.classifyFrame(tv.bitmap)
+            classifier.setListener(this)
+            classifier.getQRCodeDetails(tv.bitmap)
         }
 
         CameraX.bindToLifecycle(this, preview)
-    }
-
-    override fun onDestroy() {
-        classifier?.close()
-        super.onDestroy()
     }
 
     private fun updateTransform() {
@@ -138,17 +129,17 @@ class MainActivity : AppCompatActivity(), LifecycleOwner,ImageClassifier.Listene
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun onError(exception: Exception) {
-        Log.d(":)",exception.message.toString())
+    override fun onError(error: String?) {
+        Log.d(":)",error.toString())
     }
 
-    override fun onSucess(bitmap: Bitmap) {
-        iv.setImageBitmap(tv.bitmap)
-        btClearImage.visibility= View.VISIBLE
+    override fun onSuccess(barcodeValue: String) {
+        Toast.makeText(this, barcodeValue, Toast.LENGTH_LONG).show()
+        btClearImage.visibility = View.VISIBLE
     }
 
     override fun nextImage() {
-        if(!onPause)classifier?.classifyFrame(tv.bitmap)
+        if(!onPause)classifier.getQRCodeDetails(tv.bitmap)
     }
 
 }
